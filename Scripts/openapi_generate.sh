@@ -48,9 +48,11 @@ allowed_endpoints=(
     sendMessage
     showChannel
     stopWatchingChannel
+    truncateChannel
     unblockUsers
     unmuteChannel
     unreadCounts
+    updateChannel
     updateLiveLocation
     updateMemberPartial
     updateMessage
@@ -138,12 +140,16 @@ allowed_models=(
   SharedLocationResponseData
   SharedLocationsResponse
   SortParamRequest
+  TruncateChannelRequest
+  TruncateChannelResponse
   UnblockUsersRequest
   UnblockUsersResponse
   UnmuteChannelRequest
   UnreadCountsChannel
   UnreadCountsChannelType
   UnreadCountsThread
+  UpdateChannelRequest
+  UpdateChannelResponse
   UpdateLiveLocationRequest
   UpdateMemberPartialRequest
   UpdateMemberPartialResponse
@@ -509,6 +515,8 @@ remove_property SharedLocation channel
 remove_property SharedLocation message
 remove_property SharedLocationsResponse duration
 remove_property DeleteChannelResponse duration
+remove_property TruncateChannelResponse duration
+remove_property UpdateChannelResponse duration
 remove_property MutedChannelPayloadResponse channelMutes
 remove_property MutedChannelPayloadResponse duration
 remove_property MutedChannelPayloadResponse ownUser
@@ -516,6 +524,9 @@ remove_property CreateDraftResponse duration
 remove_property SendMessageResponsePayload duration
 remove_property UpdateMessagePartialResponse duration
 remove_property UpdateMessageResponse duration
+
+# Only needed once updateChannel(channelPayload:) migrates; pulls in ChannelInputRequest
+remove_property UpdateChannelRequest data
 
 # Server-side only: client-side requests cannot set these fields
 remove_property SendMessageResponsePayload pendingMessageMetadata
@@ -630,9 +641,8 @@ inject_v1_endpoint_paths() {
     case channels
     case groupedChannels
     case createChannel(String)
-    case updateChannel(String)
+    case updateChannelV1(String)
     case channelUpdate(String)
-    case truncateChannel(String)
     case markChannelRead(String)
     case markChannelUnread(String)
     case markAllChannelsRead
@@ -682,9 +692,8 @@ EOF
         case .channels: return "channels"
         case .groupedChannels: return "channels/grouped"
         case let .createChannel(queryString): return "channels/\(queryString)/query"
-        case let .updateChannel(queryString): return "channels/\(queryString)/query"
+        case let .updateChannelV1(queryString): return "channels/\(queryString)/query"
         case let .channelUpdate(payloadPath): return "channels/\(payloadPath)"
-        case let .truncateChannel(channelId): return "channels/\(channelId)/truncate"
         case let .markChannelRead(channelId): return "channels/\(channelId)/read"
         case let .markChannelUnread(channelId): return "channels/\(channelId)/unread"
         case .markAllChannelsRead: return "channels/read"

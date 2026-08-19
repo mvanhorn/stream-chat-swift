@@ -20,9 +20,8 @@ enum EndpointPath: Codable {
     case channels
     case groupedChannels
     case createChannel(String)
-    case updateChannel(String)
+    case updateChannelV1(String)
     case channelUpdate(String)
-    case truncateChannel(String)
     case markChannelRead(String)
     case markChannelUnread(String)
     case markAllChannelsRead
@@ -121,9 +120,17 @@ enum EndpointPath: Codable {
         type: String,
         id: String
     )
+    case truncateChannel(
+        type: String,
+        id: String
+    )
     case unblockUsers
     case unmuteChannel
     case unreadCounts
+    case updateChannel(
+        type: String,
+        id: String
+    )
     case updateLiveLocation
     case updateMemberPartial(
         type: String,
@@ -166,9 +173,8 @@ enum EndpointPath: Codable {
         case .channels: return "channels"
         case .groupedChannels: return "channels/grouped"
         case let .createChannel(queryString): return "channels/\(queryString)/query"
-        case let .updateChannel(queryString): return "channels/\(queryString)/query"
+        case let .updateChannelV1(queryString): return "channels/\(queryString)/query"
         case let .channelUpdate(payloadPath): return "channels/\(payloadPath)"
-        case let .truncateChannel(channelId): return "channels/\(channelId)/truncate"
         case let .markChannelRead(channelId): return "channels/\(channelId)/read"
         case let .markChannelUnread(channelId): return "channels/\(channelId)/unread"
         case .markAllChannelsRead: return "channels/read"
@@ -302,12 +308,22 @@ enum EndpointPath: Codable {
             id: id
         ):
             return "/api/v2/chat/channels/\(APIHelper.escapedPathItem(type))/\(APIHelper.escapedPathItem(id))/stop-watching"
+        case let .truncateChannel(
+            type: type,
+            id: id
+        ):
+            return "/api/v2/chat/channels/\(APIHelper.escapedPathItem(type))/\(APIHelper.escapedPathItem(id))/truncate"
         case .unblockUsers:
             return "/api/v2/users/unblock"
         case .unmuteChannel:
             return "/api/v2/chat/moderation/unmute/channel"
         case .unreadCounts:
             return "/api/v2/chat/unread"
+        case let .updateChannel(
+            type: type,
+            id: id
+        ):
+            return "/api/v2/chat/channels/\(APIHelper.escapedPathItem(type))/\(APIHelper.escapedPathItem(id))"
         case .updateLiveLocation:
             return "/api/v2/users/live_locations"
         case let .updateMemberPartial(
@@ -1036,6 +1052,24 @@ extension Endpoint {
         )
     }
 
+    static func truncateChannel(
+        type: String,
+        id: String,
+        truncateChannelRequest: TruncateChannelRequest,
+        requiresConnectionId: Bool = false
+    ) -> Endpoint<TruncateChannelResponse> {
+        return .init(
+            path: .truncateChannel(
+                type: type,
+                id: id
+            ),
+            method: .post,
+            queryItems: nil,
+            requiresConnectionId: requiresConnectionId,
+            body: truncateChannelRequest
+        )
+    }
+
     static func unblockUsers(
         unblockUsersRequest: UnblockUsersRequest,
         requiresConnectionId: Bool = false
@@ -1069,6 +1103,24 @@ extension Endpoint {
             queryItems: nil,
             requiresConnectionId: requiresConnectionId,
             body: nil
+        )
+    }
+
+    static func updateChannel(
+        type: String,
+        id: String,
+        updateChannelRequest: UpdateChannelRequest,
+        requiresConnectionId: Bool = false
+    ) -> Endpoint<UpdateChannelResponse> {
+        return .init(
+            path: .updateChannel(
+                type: type,
+                id: id
+            ),
+            method: .post,
+            queryItems: nil,
+            requiresConnectionId: requiresConnectionId,
+            body: updateChannelRequest
         )
     }
 

@@ -86,7 +86,7 @@ final class ChannelEndpoints_Tests: XCTestCase {
         for (query, requiresConnectionId) in testCases {
             let expectedEndpoint =
                 Endpoint<ChannelPayload>(
-                    path: .updateChannel(query.apiPath),
+                    path: .updateChannelV1(query.apiPath),
                     method: .post,
                     queryItems: nil,
                     requiresConnectionId: requiresConnectionId,
@@ -129,7 +129,7 @@ final class ChannelEndpoints_Tests: XCTestCase {
         query.options = [.state]
 
         let expectedEndpoint = Endpoint<ChannelPayload>(
-            path: .updateChannel(query.apiPath),
+            path: .updateChannelV1(query.apiPath),
             method: .post,
             queryItems: nil,
             requiresConnectionId: false,
@@ -163,107 +163,6 @@ final class ChannelEndpoints_Tests: XCTestCase {
         XCTAssertEqual(AnyEndpoint(expectedEndpoint), AnyEndpoint(endpoint))
         XCTAssertEqual("channels/\(channelPayload.apiPath)", endpoint.path.value)
         XCTAssertEqual(expectedEndpoint.method, endpoint.method)
-    }
-
-    func test_truncateChannel_buildsCorrectly() {
-        let cid = ChannelId.unique
-        let skipPush = false
-        let hardDelete = true
-        let systemMessage = "System Message"
-        let messageBody = MessageRequestBody(id: .unique, user: .dummy(userId: .unique), text: systemMessage, extraData: [:])
-        let payload = ChannelTruncateRequestPayload(skipPush: skipPush, hardDelete: hardDelete, message: messageBody)
-
-        let expectedEndpoint = Endpoint<EmptyResponse>(
-            path: .truncateChannel(cid.apiPath),
-            method: .post,
-            queryItems: nil,
-            requiresConnectionId: false,
-            body: payload
-        )
-
-        // Build endpoint
-        let endpoint: Endpoint<EmptyResponse> = .truncateChannel(
-            cid: cid,
-            skipPush: skipPush,
-            hardDelete: hardDelete,
-            message: messageBody
-        )
-
-        // Assert endpoint is built correctly
-        XCTAssertEqual(AnyEndpoint(expectedEndpoint), AnyEndpoint(endpoint))
-        XCTAssertEqual("channels/\(cid.type.rawValue)/\(cid.id)/truncate", endpoint.path.value)
-    }
-
-    func test_addMembers_buildsCorrectly() {
-        let cid = ChannelId.unique
-        let userIds: Set<UserId> = Set([UserId.unique])
-        let members = userIds.map { MemberInfoRequest(userId: $0, extraData: ["is_premium": true]) }
-
-        let expectedEndpoint = Endpoint<EmptyResponse>(
-            path: .channelUpdate(cid.apiPath),
-            method: .post,
-            queryItems: nil,
-            requiresConnectionId: false,
-            body: ["add_members": AnyEncodable(members), "hide_history": AnyEncodable(true)]
-        )
-
-        // Build endpoint
-        let endpoint: Endpoint<EmptyResponse> = .addMembers(
-            cid: cid,
-            members: members,
-            hideHistory: true
-        )
-
-        // Assert endpoint is built correctly
-        XCTAssertEqual(AnyEndpoint(expectedEndpoint), AnyEndpoint(endpoint))
-        XCTAssertEqual("channels/\(cid.type.rawValue)/\(cid.id)", endpoint.path.value)
-    }
-    
-    func test_addMembers_withHideHistoryBefore_buildsCorrectly() {
-        let cid = ChannelId.unique
-        let userIds: Set<UserId> = Set([UserId.unique])
-        let members = userIds.map { MemberInfoRequest(userId: $0, extraData: ["is_premium": true]) }
-        let hideHistoryBefore = Date()
-
-        let expectedEndpoint = Endpoint<EmptyResponse>(
-            path: .channelUpdate(cid.apiPath),
-            method: .post,
-            queryItems: nil,
-            requiresConnectionId: false,
-            body: ["add_members": AnyEncodable(members), "hide_history_before": AnyEncodable(hideHistoryBefore)]
-        )
-
-        // Build endpoint
-        let endpoint: Endpoint<EmptyResponse> = .addMembers(
-            cid: cid,
-            members: members,
-            hideHistory: true,
-            hideHistoryBefore: hideHistoryBefore
-        )
-
-        // Assert endpoint is built correctly
-        XCTAssertEqual(AnyEndpoint(expectedEndpoint), AnyEndpoint(endpoint))
-        XCTAssertEqual("channels/\(cid.type.rawValue)/\(cid.id)", endpoint.path.value)
-    }
-
-    func test_removeMembers_buildsCorrectly() {
-        let cid = ChannelId.unique
-        let userIds: Set<UserId> = Set([UserId.unique])
-
-        let expectedEndpoint = Endpoint<EmptyResponse>(
-            path: .channelUpdate(cid.apiPath),
-            method: .post,
-            queryItems: nil,
-            requiresConnectionId: false,
-            body: ["remove_members": userIds]
-        )
-
-        // Build endpoint
-        let endpoint: Endpoint<EmptyResponse> = .removeMembers(cid: cid, userIds: userIds)
-
-        // Assert endpoint is built correctly
-        XCTAssertEqual(AnyEndpoint(expectedEndpoint), AnyEndpoint(endpoint))
-        XCTAssertEqual("channels/\(cid.type.rawValue)/\(cid.id)", endpoint.path.value)
     }
 
     func test_inviteMembers_buildsCorrectly() {
@@ -533,7 +432,7 @@ final class ChannelEndpoints_Tests: XCTestCase {
         let query = ChannelWatcherListQuery(cid: cid, pagination: pagination)
 
         let expectedEndpoint = Endpoint<ChannelPayload>(
-            path: .updateChannel(query.cid.apiPath),
+            path: .updateChannelV1(query.cid.apiPath),
             method: .post,
             queryItems: nil,
             requiresConnectionId: true, // Observing watchers always requires connection id

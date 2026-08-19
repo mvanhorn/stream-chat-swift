@@ -85,6 +85,7 @@ extension EndpointPath {
              .unmuteChannel,
              .unreadCounts,
              .updateChannel,
+             .updateChannelV1,
              .updateLiveLocation,
              .updateMemberPartial,
              .updatePollPartial,

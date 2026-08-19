@@ -32,13 +32,13 @@ extension Endpoint {
     }
 
     static func updateChannel(query: ChannelQuery) -> Endpoint<ChannelPayload> {
-        createOrUpdateChannel(path: .updateChannel(query.apiPath), query: query)
+        createOrUpdateChannel(path: .updateChannelV1(query.apiPath), query: query)
     }
     
     static func channelState(query: ChannelQuery) -> Endpoint<ChannelPayload> {
         assert(!query.options.contains(oneOf: [.presence, .watch]), "This method is only for fetching channel data")
         return .init(
-            path: .updateChannel(query.apiPath),
+            path: .updateChannelV1(query.apiPath),
             method: .post,
             queryItems: nil,
             requiresConnectionId: false, // presence and watch require connection id
@@ -82,72 +82,6 @@ extension Endpoint {
         )
     }
     
-    static func truncateChannel(
-        cid: ChannelId,
-        skipPush: Bool,
-        hardDelete: Bool,
-        message: MessageRequestBody?
-    ) -> Endpoint<EmptyResponse> {
-        .init(
-            path: .truncateChannel(cid.apiPath),
-            method: .post,
-            queryItems: nil,
-            requiresConnectionId: false,
-            body: ChannelTruncateRequestPayload(
-                skipPush: skipPush,
-                hardDelete: hardDelete,
-                message: message
-            )
-        )
-    }
-
-    static func addMembers(
-        cid: ChannelId,
-        members: [MemberInfoRequest],
-        hideHistory: Bool,
-        hideHistoryBefore: Date? = nil,
-        messagePayload: MessageRequestBody? = nil
-    ) -> Endpoint<EmptyResponse> {
-        var body: [String: AnyEncodable] = [
-            "add_members": AnyEncodable(members)
-        ]
-        if let hideHistoryBefore {
-            body["hide_history_before"] = AnyEncodable(hideHistoryBefore)
-        } else {
-            body["hide_history"] = AnyEncodable(hideHistory)
-        }
-        if let messagePayload = messagePayload {
-            body["message"] = AnyEncodable(messagePayload)
-        }
-        return .init(
-            path: .channelUpdate(cid.apiPath),
-            method: .post,
-            queryItems: nil,
-            requiresConnectionId: false,
-            body: body
-        )
-    }
-
-    static func removeMembers(
-        cid: ChannelId,
-        userIds: Set<UserId>,
-        messagePayload: MessageRequestBody? = nil
-    ) -> Endpoint<EmptyResponse> {
-        var body: [String: AnyEncodable] = [
-            "remove_members": AnyEncodable(userIds)
-        ]
-        if let messagePayload = messagePayload {
-            body["message"] = AnyEncodable(messagePayload)
-        }
-        return .init(
-            path: .channelUpdate(cid.apiPath),
-            method: .post,
-            queryItems: nil,
-            requiresConnectionId: false,
-            body: body
-        )
-    }
-
     static func inviteMembers(
         cid: ChannelId,
         userIds: Set<UserId>
@@ -288,7 +222,7 @@ extension Endpoint {
 
     static func channelWatchers(query: ChannelWatcherListQuery) -> Endpoint<ChannelPayload> {
         .init(
-            path: .updateChannel(query.cid.apiPath),
+            path: .updateChannelV1(query.cid.apiPath),
             method: .post,
             queryItems: nil,
             requiresConnectionId: true,
@@ -314,21 +248,5 @@ extension Endpoint {
             requiresConnectionId: false,
             body: ["payload": query]
         )
-    }
-}
-
-struct MemberInfoRequest: Encodable {
-    let userId: UserId
-    let extraData: [String: RawJSON]?
-
-    enum CodingKeys: String, CodingKey {
-        case userId = "user_id"
-        case extraData
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(userId, forKey: .userId)
-        try extraData?.encode(to: encoder)
     }
 }
