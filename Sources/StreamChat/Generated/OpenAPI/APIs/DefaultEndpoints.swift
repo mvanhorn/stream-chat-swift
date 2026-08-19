@@ -32,11 +32,6 @@ enum EndpointPath: Codable {
     case message(MessageId)
     case deleteMessage(MessageId)
     case replies(MessageId)
-    case addReaction(MessageId)
-    case deleteReaction(
-        MessageId,
-        MessageReactionType
-    )
     case messageAction(MessageId)
     case translateMessage(MessageId)
 
@@ -88,6 +83,10 @@ enum EndpointPath: Codable {
         pollId: String,
         voteId: String
     )
+    case deleteReaction(
+        id: String,
+        type: String
+    )
     case deleteUserGroup(id: String)
     case getApp
     case getBlockedUsers
@@ -113,6 +112,7 @@ enum EndpointPath: Codable {
         type: String,
         id: String
     )
+    case sendReaction(id: String)
     case showChannel(
         type: String,
         id: String
@@ -178,11 +178,6 @@ enum EndpointPath: Codable {
         case let .message(messageId): return "messages/\(messageId)"
         case let .deleteMessage(messageId): return "messages/\(messageId)"
         case let .replies(messageId): return "messages/\(messageId)/replies"
-        case let .addReaction(messageId): return "messages/\(messageId)/reaction"
-        case let .deleteReaction(
-            messageId,
-            reaction
-        ): return "messages/\(messageId)/reaction/\(reaction.rawValue)"
         case let .messageAction(messageId): return "messages/\(messageId)/action"
         case let .translateMessage(messageId): return "messages/\(messageId)/translate"
 
@@ -248,6 +243,11 @@ enum EndpointPath: Codable {
             voteId: voteId
         ):
             return "/api/v2/chat/messages/\(APIHelper.escapedPathItem(messageId))/polls/\(APIHelper.escapedPathItem(pollId))/vote/\(APIHelper.escapedPathItem(voteId))"
+        case let .deleteReaction(
+            id: id,
+            type: type
+        ):
+            return "/api/v2/chat/messages/\(APIHelper.escapedPathItem(id))/reaction/\(APIHelper.escapedPathItem(type))"
         case let .deleteUserGroup(id: id):
             return "/api/v2/usergroups/\(APIHelper.escapedPathItem(id))"
         case .getApp:
@@ -292,6 +292,8 @@ enum EndpointPath: Codable {
             id: id
         ):
             return "/api/v2/chat/channels/\(APIHelper.escapedPathItem(type))/\(APIHelper.escapedPathItem(id))/message"
+        case let .sendReaction(id: id):
+            return "/api/v2/chat/messages/\(APIHelper.escapedPathItem(id))/reaction"
         case let .showChannel(
             type: type,
             id: id
@@ -708,6 +710,23 @@ extension Endpoint {
         )
     }
 
+    static func deleteReaction(
+        id: String,
+        type: String,
+        requiresConnectionId: Bool = false
+    ) -> Endpoint<DeleteReactionResponse> {
+        return .init(
+            path: .deleteReaction(
+                id: id,
+                type: type
+            ),
+            method: .delete,
+            queryItems: nil,
+            requiresConnectionId: requiresConnectionId,
+            body: nil
+        )
+    }
+
     static func deleteUserGroup(
         id: String,
         teamId: String?,
@@ -999,6 +1018,20 @@ extension Endpoint {
             queryItems: nil,
             requiresConnectionId: requiresConnectionId,
             body: sendMessageRequest
+        )
+    }
+
+    static func sendReaction(
+        id: String,
+        sendReactionRequest: SendReactionRequest,
+        requiresConnectionId: Bool = false
+    ) -> Endpoint<SendReactionResponse> {
+        return .init(
+            path: .sendReaction(id: id),
+            method: .post,
+            queryItems: nil,
+            requiresConnectionId: requiresConnectionId,
+            body: sendReactionRequest
         )
     }
 
