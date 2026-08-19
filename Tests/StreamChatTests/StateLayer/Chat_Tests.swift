@@ -717,7 +717,8 @@ final class Chat_Tests: XCTestCase {
         let apiResponse = SendMessageResponsePayload.dummy(
             message: .dummy(
                 messageId: messageId,
-                text: text
+                text: text,
+                cid: channelId
             )
         )
         env.client.mockAPIClient.test_mockResponseResult(.success(apiResponse))
@@ -757,7 +758,7 @@ final class Chat_Tests: XCTestCase {
         let messageId = try await MainActor.run { try XCTUnwrap(chat.state.messages.first?.id) }
         let action = AttachmentAction(name: "name", value: "value", style: .default, type: .button, text: "text")
         
-        let apiResponse = MessagePayload.Boxed(message: .dummy(type: .ephemeral, messageId: messageId, text: "TextChanged"))
+        let apiResponse = MessagePayload.Boxed(message: .dummy(type: .ephemeral, messageId: messageId, text: "TextChanged", cid: channelId))
         env.client.mockAPIClient.test_mockResponseResult(.success(apiResponse))
         try await chat.sendMessageAction(in: messageId, action: action)
         let message = try await MainActor.run { try XCTUnwrap(chat.localMessage(for: messageId)) }
@@ -797,7 +798,8 @@ final class Chat_Tests: XCTestCase {
         let apiResponse = SendMessageResponsePayload.dummy(
             message: .dummy(
                 messageId: "0",
-                text: text
+                text: text,
+                cid: channelId
             )
         )
         env.client.mockAPIClient.test_mockResponseResult(.success(apiResponse))
@@ -852,7 +854,8 @@ final class Chat_Tests: XCTestCase {
             message: .dummy(
                 type: .system,
                 messageId: "0",
-                text: text
+                text: text,
+                cid: channelId
             )
         )
         env.client.mockAPIClient.test_mockResponseResult(.success(apiResponse))
@@ -1579,7 +1582,8 @@ final class Chat_Tests: XCTestCase {
         let apiResponse = SendMessageResponsePayload.dummy(
             message: .dummy(
                 messageId: "reply_0",
-                parentId: lastMessageId
+                parentId: lastMessageId,
+                cid: channelId
             )
         )
         env.client.mockAPIClient.test_mockResponseResult(.success(apiResponse))
